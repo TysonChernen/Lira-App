@@ -1,6 +1,7 @@
-from sqlalchemy import Column, Integer, String, Enum
+from datetime import datetime, timedelta
+from sqlalchemy import Column, Integer, String, Enum, Boolean, DateTime, ForeignKey
 from app.database import Base
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import declarative_base, relationship
 import enum
 
 class UserRole(str, enum.Enum):
@@ -11,10 +12,27 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    role = Column(Enum(UserRole), default=UserRole.student)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, nullable=False)  # "student" or "teacher"
+
+     # Relationship to Subscription
+    subscription = relationship("Subscription", back_populates="user", uselist=False)
+
+
+class Subscription(Base):
+    __tablename__ = "subscriptions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    plan = Column(String, nullable=False)  # "student" or "teacher"
+    is_trial = Column(Boolean, default=True)  # True if in free trial
+    start_date = Column(DateTime, default=datetime.utcnow)
+    end_date = Column(DateTime)  # End of trial or subscription
+
+    # Relationship back to User
+    user = relationship("User", back_populates="subscription")
 
 
 
