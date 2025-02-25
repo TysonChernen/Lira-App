@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.database import engine, Base
 from app import models  # Corrected import
-from app.routers import users, subscriptions  # Import subscriptions
+from app.routers import users, subscriptions, dashboard  # Import subscriptions
 
 # ✅ Define `app` before using it
 app = FastAPI()
@@ -19,4 +19,4 @@ def home():
 
 app.include_router(users.router)
 app.include_router(subscriptions.router)  # Register new subscription routes
-
+app.include_router(dashboard.router) 

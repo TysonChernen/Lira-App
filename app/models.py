@@ -36,3 +36,23 @@ class Subscription(Base):
 
 
 
+class Lesson(Base):
+    __tablename__ = "lessons"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    category = Column(String, nullable=False)  # Example: "Phonics", "Reading"
+    level = Column(Integer, nullable=False)
+    content = Column(String, nullable=False)  # Lesson content (or link to content)
+
+class Progress(Base):
+    __tablename__ = "progress"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    lesson_id = Column(Integer, ForeignKey("lessons.id"), nullable=False)
+    completed = Column(Boolean, default=False)
+    last_accessed = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
+    lesson = relationship("Lesson")
