@@ -23,29 +23,36 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 # OAuth2 setup
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    """Create a JWT access token with expiration time."""
-    to_encode = data.copy()
+def create_access_token(user_id: int, email: str, role: str, expires_delta: timedelta = None):
+    """Create a JWT access token with expiration time, including user ID."""
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    payload = {
+        "sub": str(user_id),  # ✅ Make sure ID is included as a string
+        "email": email,
+        "role": role,
+        "exp": expire
+    }
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
 
 def get_current_user(token: str = Depends(oauth2_scheme)):
-    """Extract user details from the JWT token."""
+    """Extract user details from the JWT token, including user ID."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_email = payload.get("sub")
+        user_id = payload.get("sub")  # ✅ Extract user ID
+        user_email = payload.get("email")
         user_role = payload.get("role")  # Ensure role is included
 
-        if not user_email or not user_role:
+        if not user_id or not user_email or not user_role:
             raise HTTPException(status_code=401, detail="Invalid token payload")
 
-        return {"email": user_email, "role": user_role}
+        return {"id": user_id, "email": user_email, "role": user_role}  # ✅ Include "id"
 
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired. Please log in again.")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid authentication token.")
+
 
 def require_role(required_role: str):
     """Dependency to check if a user has the correct role."""

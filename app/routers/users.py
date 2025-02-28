@@ -40,9 +40,12 @@ def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    # ✅ Include user role in JWT token
-    access_token = create_access_token(data={"sub": db_user.email, "role": db_user.role})
+    access_token = create_access_token(db_user.id, db_user.email, db_user.role)
+
+
     return {"access_token": access_token, "token_type": "bearer"}
+
+
 
 # ✅ Use role-based protection for teachers
 @router.get("/teacher-dashboard")
